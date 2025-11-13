@@ -6,6 +6,8 @@ matplotlib==3.10.7
 seaborn==0.13.2
 joblib==1.5.2
 pydantic==2.12.4
+streamlit==1.51.0
+
 
 
 
