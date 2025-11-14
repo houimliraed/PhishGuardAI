@@ -1,2 +1,1 @@
 # phishing_detector
-
