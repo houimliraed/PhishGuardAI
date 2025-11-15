@@ -13,7 +13,7 @@ scaler = joblib.load(scaler_path)
 
 def predict_url(url: str):
     features = extract_features(url)
-    features_scaled = scaler.transform([features])
+    features_scaled = scaler.transform(features)
     predict = model.predict(features_scaled)[0]
     
     return {
