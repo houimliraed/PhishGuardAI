@@ -4,13 +4,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
-app = FastAPI(title="AI URL finishing detector",
-              version=1.0,
-              description="API for testing finishing url using ML")
+app = FastAPI(
+    title="AI URL phishing detector",
+    version="1.0",
+    description="API for testing phishing URLs using ML",
+)
+
+# Allow known dev origins (Vite defaults to 5173) without wildcard when using credentials
 origins = [
-    "http://localhost:3000",     
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "*"                     
 ]
 app.add_middleware(
     CORSMiddleware,

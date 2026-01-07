@@ -17,8 +17,8 @@ def predict_url(url: str):
     predict = model.predict(features_scaled)[0]
     
     return {
-        "url":url,
-        "prediction": "fishing" if predict == 1 else "safe"
+        "url": url,
+        "prediction": "phishing" if predict == 1 else "safe"
     }
     
 

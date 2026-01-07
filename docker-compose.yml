@@ -1,13 +1,29 @@
+version: "3.9"
 
 services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    image: backend
+    container_name: url-detector-backend
+    environment:
+      - APP_MODULE=app.main:app
+      - PORT=4000
     ports:
       - "4000:4000"
-    volumes:
-      - ./backend:/backend
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os, urllib.request, sys; url='http://127.0.0.1:'+os.environ.get('PORT','4000')+'/openapi.json'; sys.exit(0) if urllib.request.urlopen(url, timeout=2).status==200 else sys.exit(1)\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 4000
+  frontend:
+    build:
+      context: ./frontend
+    container_name: url-detector-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
