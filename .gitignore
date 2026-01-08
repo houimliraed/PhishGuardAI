@@ -1,54 +1,70 @@
-.venv
+# ============================================================================
+# Environment & Configuration
+# ============================================================================
 .env
-data/
-/data/*
+.env.local
+.env*.local
+
+# ============================================================================
+# Python
+# ============================================================================
+.venv/
+venv/
+env/
+.Python
+*.py[cod]
 __pycache__/
-*.pyc
-.DS_Store        
-.ipynb_checkpoints
-.vscode/
-models/
-logs/
-results/
-*.h5
+*.so
+*.egg-info/
+dist/
+build/
+
+# ============================================================================
+# Data & Models (Generated Artifacts)
+# ============================================================================
+data/
 *.pkl
 *.joblib
-*.sqlite3
-*.db
-coverage
-backend/__pycache__/
-backend/*.pyc
-frontend/__pycache__/
-frontend/*.pyc
-tests/__pycache__/
-tests/*.pyc
-/frontend/build/
-/frontend/node_modules/
-/frontend/Logs
-/frontend/*.log
-/frontend/npm-debug.log*
-/frontend/yarn-debug.log*
-/frontend/yarn-error.log*
-/frontend/pnpm-debug.log*
-/frontend/lerna-debug.log*
+*.h5
+logs/
+results/
+coverage/
 
-/frontend/node_modules
-/frontend/dist
-/frontend/dist-ssr
-/frontend/*.local
+# ============================================================================
+# IDE & Editor
+# ============================================================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
-# Editor directories and files
-/frontend/.vscode/*
-/frontend/!.vscode/extensions.json
-/frontend/.idea
-/frontend/.DS_Store
-/frontend/*.suo
-/frontend/*.ntvs*
-/frontend/*.njsproj
-/frontend/*.sln
-/frontend/*.sw?
+# ============================================================================
+# OS Files
+# ============================================================================
+.DS_Store
+Thumbs.db
+*.lnk
 
-backend/app/schemas/__pycache__
-backend/app/core/__pycache__
-backend/app/api/__pycache__
-backend/app/models/__pycache__
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+.ipynb_checkpoints/
+
+# ============================================================================
+# Node.js / Frontend
+# ============================================================================
+node_modules/
+dist/
+dist-ssr/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.local
