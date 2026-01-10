@@ -1,0 +1,14 @@
+stages:
+  - test
+
+# This line pulls in the professional security logic from GitLab
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+# This part runs the actual scan
+secret_detection:
+  stage: test
+  variables:
+    SECRET_DETECTION_REPORT_FILE: "gl-secret-detection-report.json"
+  artifacts:
+    paths: [gl-secret-detection-report.json]
