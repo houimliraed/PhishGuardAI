@@ -1,0 +1,7 @@
+services:
+  terraform:
+    image: hashicorp/terraform:latest
+    container_name: terraform
+    working_dir: /infr
+    volumes:
+      - ./:/infr
