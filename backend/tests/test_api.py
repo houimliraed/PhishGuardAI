@@ -5,8 +5,9 @@ Tests the /api/predict endpoint functionality.
 
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
 
+# Import app after conftest has set up the mocks
+from app.main import app
 
 client = TestClient(app)
 
