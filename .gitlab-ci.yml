@@ -47,8 +47,6 @@ build:backend:
     - main
     - develop
     - merge_requests
-  tags:
-    - docker
   cache:
     key: backend-build-cache
     paths:
@@ -75,8 +73,6 @@ build:frontend:
     - main
     - develop
     - merge_requests
-  tags:
-    - docker
   cache:
     key: frontend-build-cache
     paths:
@@ -90,25 +86,8 @@ build:frontend:
 # STAGE 2: TEST
 # ============================================
 
-test:secret-detection:
-  stage: test
-  variables:
-    SECRET_DETECTION_REPORT_FILE: "gl-secret-detection-report.json"
-  artifacts:
-    reports:
-      secret_detection: gl-secret-detection-report.json
-    paths:
-      - gl-secret-detection-report.json
-    expire_in: 1 week
-  allow_failure: false
-
-test:sast:
-  stage: test
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
-    expire_in: 1 week
-  allow_failure: true
+# Note: secret_detection and sast jobs are automatically created by the included templates
+# We don't need to redefine them here - the templates handle everything
 
 test:backend-unit:
   stage: test
