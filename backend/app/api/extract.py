@@ -6,3 +6,4 @@ router = APIRouter()
 
 @router.post("/extract")
 def extract(request: ExtractRequest):
+    return extract_data(request.source)
