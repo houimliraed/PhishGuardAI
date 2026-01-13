@@ -339,8 +339,9 @@ describe('App Component', () => {
       await user.click(button)
 
       await waitFor(() => {
-        // Should show JSON when no score
-        expect(screen.getByText(/safe/i)).toBeInTheDocument()
+        // Should show the Safe badge (use getAllByText since "safe" appears multiple times)
+        const safeElements = screen.getAllByText(/safe/i)
+        expect(safeElements.length).toBeGreaterThan(0)
       })
     })
   })
