@@ -1,7 +1,7 @@
 # PhishGuardAI - Phishing URL Detection
 
-[![Pipeline Status](https://gitlab.com/YOUR_NAMESPACE/ml-devops/badges/main/pipeline.svg)](https://gitlab.com/YOUR_NAMESPACE/ml-devops/-/pipelines)
-[![Coverage](https://gitlab.com/YOUR_NAMESPACE/ml-devops/badges/main/coverage.svg)](https://gitlab.com/YOUR_NAMESPACE/ml-devops/-/graphs/main/charts)
+[![Pipeline Status](https://gitlab.com/houimliraed/ml-devops/badges/main/pipeline.svg)](https://gitlab.com/houimliraed/ml-devops/-/pipelines)
+[![Coverage](https://gitlab.com/houimliraed/ml-devops/badges/main/coverage.svg)](https://gitlab.com/houimliraed/ml-devops/-/graphs/main/charts)
 
 A machine learning-powered web application to detect and classify phishing URLs.
 
@@ -9,10 +9,11 @@ A machine learning-powered web application to detect and classify phishing URLs.
 
 | Name | Role | GitLab |
 |------|------|--------|
-| Member 1 | Product Owner | @username1 |
-| Member 2 | DevOps Engineer | @username2 |
-| Member 3 | Backend Developer | @username3 |
-| Member 4 | Frontend Developer | @username4 |
+| Houimli Raed | Product Owner | @houimliraed |
+| Abroud Ridha | DevOps Engineer | @abroud.ridha91 |
+| Khalfallah Fedi | Backend Developer | @FediTheOne |
+| Bouraoui Saoussen | Frontend Developer | @saoussen.br |
+| Ben Hadj Dahmen Oussama | ML Engineer & Security | @cybereagle2001 |
 
 ## Setup
 
