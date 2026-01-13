@@ -144,13 +144,14 @@ class TestPredictAPI:
             assert "prediction" in data
 
     def test_cors_headers_present(self):
-        """Test that CORS headers are present in response."""
+        """Test that CORS headers are present in response with origin."""
         response = client.post(
             "/api/predict",
-            json={"url": "https://example.com"}
+            json={"url": "https://example.com"},
+            headers={"origin": "http://localhost:5173"}
         )
 
-        # Check for CORS headers
+        # Check for CORS headers (they appear when origin is sent)
         assert "access-control-allow-origin" in response.headers
 
     def test_content_type_json(self):

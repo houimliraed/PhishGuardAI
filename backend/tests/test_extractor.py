@@ -104,8 +104,8 @@ class TestExtractFeatures:
         url = "https://api.v2.example.com"
         result = extract_features(url)
 
-        # api.v2.example.com has 2 dots in domain = 2 subdomains
-        assert result["Num_Subdomains"].values[0] == 2
+        # api.v2.example.com has 3 dots in domain = 3 subdomains
+        assert result["Num_Subdomains"].values[0] == 3
 
     def test_subdomains_no_subdomain(self):
         """Test Num_Subdomains with no subdomain."""
@@ -176,9 +176,9 @@ class TestExtractFeatures:
         assert result["Num_Subdomains"].values[0] == 0
 
     @pytest.mark.parametrize("url,expected_length", [
-        ("https://a.com", 14),
+        ("https://a.com", 13),
         ("http://example.com", 18),
-        ("https://very-long-domain-name-for-testing.com/path", 51),
+        ("https://very-long-domain-name-for-testing.com/path", 50),
     ])
     def test_various_url_lengths(self, url, expected_length):
         """Test URL length calculation for various URLs."""
