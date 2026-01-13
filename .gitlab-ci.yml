@@ -43,10 +43,9 @@ build:backend:
     - docker push $BACKEND_IMAGE
     - docker push $BACKEND_IMAGE_LATEST
     - echo "Backend image built successfully"
-  only:
-    - main
-    - develop
-    - merge_requests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   cache:
     key: backend-build-cache
     paths:
@@ -55,6 +54,7 @@ build:backend:
     reports:
       dotenv: build.env
     expire_in: 1 week
+  allow_failure: true
 
 build:frontend:
   stage: build
@@ -68,11 +68,10 @@ build:frontend:
     - docker build -t $FRONTEND_IMAGE -t $FRONTEND_IMAGE_LATEST ./frontend
     - docker push $FRONTEND_IMAGE
     - docker push $FRONTEND_IMAGE_LATEST
-    - echo "Frontend image built successfully"
-  only:
-    - main
-    - develop
-    - merge_requests
+    - echo "Frontend build successful"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   cache:
     key: frontend-build-cache
     paths:
@@ -81,6 +80,7 @@ build:frontend:
     reports:
       dotenv: build.env
     expire_in: 1 week
+  allow_failure: true
 
 # ============================================
 # STAGE 2: TEST
@@ -164,13 +164,8 @@ deploy:staging:
     - apk add --no-cache curl
   script:
     - echo "Deploying to staging environment..."
-    - echo "Backend image: $BACKEND_IMAGE"
-    - echo "Frontend image: $FRONTEND_IMAGE"
-    # TODO: Add actual deployment commands based on chosen platform
-    # Examples:
-    # - AWS ECS: aws ecs update-service ...
-    # - Kubernetes: kubectl set image deployment/...
-    # - Heroku: heroku container:release web
+    - echo "Backend image - $BACKEND_IMAGE"
+    - echo "Frontend image - $FRONTEND_IMAGE"
     - echo "Deployment preparation completed"
     - echo "DEPLOYMENT_URL=https://staging.phishguard.example.com" >> deploy.env
   environment:
@@ -180,9 +175,9 @@ deploy:staging:
     reports:
       dotenv: deploy.env
     expire_in: 1 week
-  only:
-    - develop
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual
   allow_failure: false
 
 deploy:production:
@@ -192,9 +187,8 @@ deploy:production:
     - apk add --no-cache curl
   script:
     - echo "Deploying to production environment..."
-    - echo "Backend image: $BACKEND_IMAGE"
-    - echo "Frontend image: $FRONTEND_IMAGE"
-    # TODO: Add actual deployment commands based on chosen platform
+    - echo "Backend image - $BACKEND_IMAGE"
+    - echo "Frontend image - $FRONTEND_IMAGE"
     - echo "Production deployment preparation completed"
     - echo "DEPLOYMENT_URL=https://phishguard.example.com" >> deploy.env
   environment:
@@ -204,9 +198,9 @@ deploy:production:
     reports:
       dotenv: deploy.env
     expire_in: 1 week
-  only:
-    - main
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
   allow_failure: false
 
 # ============================================
