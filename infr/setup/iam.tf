@@ -1,10 +1,8 @@
+# iam for the deployement user
 
-resource "aws_user" "deploy_user" {
-  name = "${var.prefix}-deploy-user"
-  tags = {
-    Environment = terraform.workspace
-    Project     = var.project
-    contact     = var.contact
-    ManagedBy   = "Terraform/setup"
-  }
+resource "aws_iam_user" "cd" {
+  name = "devops-cd"
+}
+resource "aws_iam_access_key" "cd" {
+  user = aws_iam_user.cd.name
 }
