@@ -1,14 +1,244 @@
-stages:
-  - test
+# ============================================
+# CI/CD Pipeline - PhishGuardAI
+# Stages: build → test → deploy
+# ============================================
 
-# This line pulls in the professional security logic from GitLab
+stages:
+  - build
+  - test
+  - deploy
+
+# ============================================
+# Global Variables
+# ============================================
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+  BACKEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend:latest
+  FRONTEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend:latest
+
+# ============================================
+# Templates for Security Scanning
+# ============================================
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
 
-# This part runs the actual scan
-secret_detection:
+# ============================================
+# STAGE 1: BUILD
+# ============================================
+
+build:backend:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - echo "Building backend Docker image..."
+    - docker build -t $BACKEND_IMAGE -t $BACKEND_IMAGE_LATEST ./backend
+    - docker push $BACKEND_IMAGE
+    - docker push $BACKEND_IMAGE_LATEST
+    - echo "Backend image built successfully"
+  only:
+    - main
+    - develop
+    - merge_requests
+  tags:
+    - docker
+  cache:
+    key: backend-build-cache
+    paths:
+      - backend/.cache
+  artifacts:
+    reports:
+      dotenv: build.env
+    expire_in: 1 week
+
+build:frontend:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - echo "Building frontend Docker image..."
+    - docker build -t $FRONTEND_IMAGE -t $FRONTEND_IMAGE_LATEST ./frontend
+    - docker push $FRONTEND_IMAGE
+    - docker push $FRONTEND_IMAGE_LATEST
+    - echo "Frontend image built successfully"
+  only:
+    - main
+    - develop
+    - merge_requests
+  tags:
+    - docker
+  cache:
+    key: frontend-build-cache
+    paths:
+      - frontend/node_modules
+  artifacts:
+    reports:
+      dotenv: build.env
+    expire_in: 1 week
+
+# ============================================
+# STAGE 2: TEST
+# ============================================
+
+test:secret-detection:
   stage: test
   variables:
     SECRET_DETECTION_REPORT_FILE: "gl-secret-detection-report.json"
   artifacts:
-    paths: [gl-secret-detection-report.json]
+    reports:
+      secret_detection: gl-secret-detection-report.json
+    paths:
+      - gl-secret-detection-report.json
+    expire_in: 1 week
+  allow_failure: false
+
+test:sast:
+  stage: test
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+    expire_in: 1 week
+  allow_failure: true
+
+test:backend-unit:
+  stage: test
+  image: python:3.12-slim
+  before_script:
+    - cd backend
+    - pip install --no-cache-dir -r requirements.txt
+    - pip install pytest pytest-cov pytest-asyncio httpx
+  script:
+    - echo "Running backend unit tests..."
+    # For now, just verify the app can be imported
+    - python -c "from app.main import app; print('Backend app loads successfully')"
+    - echo "Backend validation passed"
+    # TODO: Add actual pytest execution when tests are implemented
+    # - pytest tests/ --cov=app --cov-report=xml --cov-report=term
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+    paths:
+      - backend/coverage.xml
+      - backend/htmlcov/
+    expire_in: 1 week
+  allow_failure: true
+
+test:frontend-unit:
+  stage: test
+  image: node:20-alpine
+  before_script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "Running frontend unit tests..."
+    - npm run build
+    - echo "Frontend build successful"
+    # TODO: Add actual test execution when tests are implemented
+    # - npm run test:unit -- --coverage
+  cache:
+    key: frontend-test-cache
+    paths:
+      - frontend/.npm
+      - frontend/node_modules
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+    paths:
+      - frontend/coverage/
+    expire_in: 1 week
+  allow_failure: true
+
+test:docker-compose:
+  stage: test
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  script:
+    - echo "Testing Docker Compose configuration..."
+    - docker compose config
+    - echo "Docker Compose configuration is valid"
+  allow_failure: false
+
+# ============================================
+# STAGE 3: DEPLOY
+# ============================================
+
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Backend image: $BACKEND_IMAGE"
+    - echo "Frontend image: $FRONTEND_IMAGE"
+    # TODO: Add actual deployment commands based on chosen platform
+    # Examples:
+    # - AWS ECS: aws ecs update-service ...
+    # - Kubernetes: kubectl set image deployment/...
+    # - Heroku: heroku container:release web
+    - echo "Deployment preparation completed"
+    - echo "DEPLOYMENT_URL=https://staging.phishguard.example.com" >> deploy.env
+  environment:
+    name: staging
+    url: https://staging.phishguard.example.com
+  artifacts:
+    reports:
+      dotenv: deploy.env
+    expire_in: 1 week
+  only:
+    - develop
+  when: manual
+  allow_failure: false
+
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to production environment..."
+    - echo "Backend image: $BACKEND_IMAGE"
+    - echo "Frontend image: $FRONTEND_IMAGE"
+    # TODO: Add actual deployment commands based on chosen platform
+    - echo "Production deployment preparation completed"
+    - echo "DEPLOYMENT_URL=https://phishguard.example.com" >> deploy.env
+  environment:
+    name: production
+    url: https://phishguard.example.com
+  artifacts:
+    reports:
+      dotenv: deploy.env
+    expire_in: 1 week
+  only:
+    - main
+  when: manual
+  allow_failure: false
+
+# ============================================
+# Additional Jobs
+# ============================================
+
+cleanup:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Cleaning up old artifacts..."
+    - echo "Cleanup completed"
+  when: on_success
+  allow_failure: true

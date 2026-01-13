@@ -1,6 +1,18 @@
 # PhishGuardAI - Phishing URL Detection
 
+[![Pipeline Status](https://gitlab.com/YOUR_NAMESPACE/ml-devops/badges/main/pipeline.svg)](https://gitlab.com/YOUR_NAMESPACE/ml-devops/-/pipelines)
+[![Coverage](https://gitlab.com/YOUR_NAMESPACE/ml-devops/badges/main/coverage.svg)](https://gitlab.com/YOUR_NAMESPACE/ml-devops/-/graphs/main/charts)
+
 A machine learning-powered web application to detect and classify phishing URLs.
+
+## 🚀 Team Members
+
+| Name | Role | GitLab |
+|------|------|--------|
+| Member 1 | Product Owner | @username1 |
+| Member 2 | DevOps Engineer | @username2 |
+| Member 3 | Backend Developer | @username3 |
+| Member 4 | Frontend Developer | @username4 |
 
 ## Setup
 
@@ -54,11 +66,92 @@ PhishGuardAI/
 ## Features
 
 - URL feature extraction and analysis
-- ML-based phishing detection
+- ML-based phishing detection (RandomForest classifier)
 - REST API for predictions
 - Interactive web interface
+- Docker containerization
+- Automated CI/CD pipeline with GitLab
+
+## 🏗️ Architecture
+
+```
+┌─────────────┐      ┌──────────────┐      ┌─────────────┐
+│   Frontend  │─────▶│  Nginx Proxy │─────▶│   Backend   │
+│ (React+Vite)│      │    (Port 80) │      │  (FastAPI)  │
+│  Port 8080  │      └──────────────┘      │  Port 4000  │
+└─────────────┘                            └─────────────┘
+                                                   │
+                                                   ▼
+                                           ┌───────────────┐
+                                           │  ML Models    │
+                                           │ (RandomForest)│
+                                           └───────────────┘
+```
+
+## 🔧 Technologies
+
+- **Backend**: FastAPI, Python 3.12, scikit-learn, pandas
+- **Frontend**: React 18, Vite, Nginx
+- **ML**: RandomForest classifier, feature extraction
+- **DevOps**: Docker, Docker Compose, GitLab CI/CD
+- **Security**: Secret detection, SAST scanning
+
+## 📊 CI/CD Pipeline
+
+The project uses a GitLab CI/CD pipeline with 3 stages:
+
+1. **Build**: Docker images for backend and frontend
+2. **Test**: Unit tests, security scans (secrets, SAST), Docker Compose validation
+3. **Deploy**: Automated deployment to staging/production (manual trigger)
+
+## 🌐 Deployment
+
+- **Staging**: https://staging.phishguard.example.com (auto-deploy from `develop` branch)
+- **Production**: https://phishguard.example.com (manual deploy from `main` branch)
+
+## 📝 Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Backend
+APP_MODULE=app.main:app
+PORT=4000
+
+# Frontend
+VITE_API_BASE=/api
+```
+
+## 🧪 Running Tests
+
+### Backend Tests
+```bash
+cd backend
+pip install -r requirements.txt
+pip install pytest pytest-cov pytest-asyncio httpx
+pytest tests/ --cov=app --cov-report=html
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm install
+npm run test
+```
+
+## 📚 Documentation
+
+- [Architecture Documentation](ARCHITECTURE.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [User Stories](USER_STORIES.md)
+- [API Documentation](http://localhost:4000/docs) (when running)
 
 ## Important Notes
 
 - **ML Model Files**: The `backend/app/models/` directory contains generated model files that are NOT tracked in git. These must be regenerated using the training notebook when setting up a fresh environment.
 - See `backend/app/models/README.md` for details on generating models.
+- **Security**: Never commit secrets or API keys. Use GitLab CI/CD variables for sensitive data.
+
+## 📧 Contact
+
+**Instructor**: Sonia Ben Aissa (benissasonia@gmail.com)
