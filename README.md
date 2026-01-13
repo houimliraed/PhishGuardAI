@@ -147,6 +147,74 @@ npm run test
 - [User Stories](USER_STORIES.md)
 - [API Documentation](http://localhost:4000/docs) (when running)
 
+
+## 🛡️ DevSecOps & Security
+
+This project implements automated security guardrails within the CI/CD pipeline to ensure code integrity and infrastructure safety.
+
+### **1. Automated Security Scanning**
+
+Leverages GitLab's managed security templates to "shift security left," catching vulnerabilities during the development phase.
+
+- **SAST & Secret Detection:** Automatically scans source code for vulnerabilities (OWASP Top 10) and prevents the accidental commit of API keys or credentials with dependency check if any third partie library has a known CVE or vulnerability.
+
+```yaml
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+```
+
+### **2. Secure Containerization**
+
+Infrastructure is hardened using industry-standard Docker security practices.
+
+- **mTLS Encryption:** Communication between the Docker client and daemon is encrypted using Mutual TLS.
+
+```yaml
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+services:
+  - docker:24-dind
+```
+
+- **Credential Masking:** Registry passwords are piped via `stdin` to prevent sensitive strings from appearing in shell execution logs or process lists.
+
+```yaml
+before_script:
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+```
+
+### **3. Deployment Governance**
+
+Strict rules ensure that only verified code reaches staging and production environments.
+
+- **Manual Gates:** Production and Staging deployments require explicit manual approval by an authorized user.
+
+```yaml
+rules:
+  - if: $CI_COMMIT_BRANCH == "main"
+    when: manual
+```
+
+- **Immutable Tagging:** Docker images are tagged with the specific commit SHA, ensuring that the exact code that was tested is the code that is deployed.
+
+```yaml
+variables:
+  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+```
+
+### **4. Data Retention & Hygiene**
+
+Minimizes the "attack surface" of stored artifacts.
+
+- **Artifact Expiration:** Build artifacts and environment files are automatically purged after 7 days to prevent long-term storage of sensitive build data.
+
+```yaml
+artifacts:
+  expire_in: 1 week
+```
+
 ## Important Notes
 
 - **ML Model Files**: The `backend/app/models/` directory contains generated model files that are NOT tracked in git. These must be regenerated using the training notebook when setting up a fresh environment.
