@@ -98,11 +98,8 @@ test:backend-unit:
     - pip install pytest pytest-cov pytest-asyncio httpx
   script:
     - echo "Running backend unit tests..."
-    # For now, just verify the app can be imported
-    - python -c "from app.main import app; print('Backend app loads successfully')"
-    - echo "Backend validation passed"
-    # TODO: Add actual pytest execution when tests are implemented
-    # - pytest tests/ --cov=app --cov-report=xml --cov-report=term
+    - pytest tests/ --cov=app --cov-report=xml --cov-report=term --cov-report=html
+    - echo "Backend tests completed"
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
@@ -113,7 +110,7 @@ test:backend-unit:
       - backend/coverage.xml
       - backend/htmlcov/
     expire_in: 1 week
-  allow_failure: true
+  allow_failure: false
 
 test:frontend-unit:
   stage: test
@@ -123,10 +120,8 @@ test:frontend-unit:
     - npm ci --cache .npm --prefer-offline
   script:
     - echo "Running frontend unit tests..."
-    - npm run build
-    - echo "Frontend build successful"
-    # TODO: Add actual test execution when tests are implemented
-    # - npm run test:unit -- --coverage
+    - npm run test:coverage
+    - echo "Frontend tests completed"
   cache:
     key: frontend-test-cache
     paths:
@@ -140,7 +135,7 @@ test:frontend-unit:
     paths:
       - frontend/coverage/
     expire_in: 1 week
-  allow_failure: true
+  allow_failure: false
 
 test:docker-compose:
   stage: test
