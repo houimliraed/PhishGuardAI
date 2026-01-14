@@ -29,3 +29,15 @@ variable "aws_account_id" {
   type        = string
 }
 
+variable "frontend_domain_name" {
+  description = "Domain name for frontend (leave empty to use CloudFront domain)"
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  description = "Route53 zone ID for DNS records (optional)"
+  type        = string
+  default     = ""
+}
+

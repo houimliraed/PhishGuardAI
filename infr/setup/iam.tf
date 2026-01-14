@@ -182,3 +182,83 @@ resource "aws_iam_user_policy_attachment" "eks" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.eks.arn
 }
+
+# S3 and CloudFront permissions
+
+data "aws_iam_policy_document" "s3_cloudfront" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:ListBucket",
+      "s3:GetBucketVersioning",
+      "s3:PutBucketVersioning",
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy",
+      "s3:PutPublicAccessBlock",
+      "s3:GetPublicAccessBlock",
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:ListBucketVersions"
+    ]
+    resources = [
+      "arn:aws:s3:::phishguard-frontend-*",
+      "arn:aws:s3:::phishguard-frontend-*/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudfront:CreateDistribution",
+      "cloudfront:DeleteDistribution",
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:ListDistributions",
+      "cloudfront:UpdateDistribution",
+      "cloudfront:CreateOriginAccessControl",
+      "cloudfront:DeleteOriginAccessControl",
+      "cloudfront:GetOriginAccessControl",
+      "cloudfront:ListOriginAccessControls",
+      "cloudfront:CreateInvalidation",
+      "cloudfront:GetInvalidation",
+      "cloudfront:ListInvalidations"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "acm:RequestCertificate",
+      "acm:DescribeCertificate",
+      "acm:DeleteCertificate",
+      "acm:ListCertificates"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "route53:ChangeResourceRecordSets",
+      "route53:GetChange",
+      "route53:ListResourceRecordSets"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "s3_cloudfront" {
+  name        = "${aws_iam_user.cd.name}-s3-cloudfront"
+  description = "Allow user to manage S3 and CloudFront for frontend"
+  policy      = data.aws_iam_policy_document.s3_cloudfront.json
+}
+
+resource "aws_iam_user_policy_attachment" "s3_cloudfront" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.s3_cloudfront.arn
+}

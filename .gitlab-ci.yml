@@ -193,7 +193,17 @@ deploy:infrastructure:
     - docker compose run --rm terraform plan
     - docker compose run --rm terraform apply -auto-approve
     - export LB_DNS=$(docker compose run --rm terraform output -raw load_balancer_dns)
-    - echo "LB_DNS=${LB_DNS}" >> /tmp/deploy.env
+    - export S3_BUCKET=$(docker compose run --rm terraform output -raw s3_bucket_name)
+    - export CF_DIST_ID=$(docker compose run --rm terraform output -raw cloudfront_distribution_id)
+    - export FRONTEND_URL=$(docker compose run --rm terraform output -raw frontend_url)
+    - echo "S3_BUCKET=${S3_BUCKET}" >> /tmp/deploy.env
+    - echo "CF_DIST_ID=${CF_DIST_ID}" >> /tmp/deploy.env
+    - cd ../../frontend
+    - npm install
+    - npm run build
+    - aws s3 sync dist/ "s3://${S3_BUCKET}/" --delete
+    - aws cloudfront create-invalidation --distribution-id "${CF_DIST_ID}" --paths "/*"
+    - echo "Frontend deployed and CloudFront invalidated"
   artifacts:
     reports:
       dotenv: /tmp/deploy.env
