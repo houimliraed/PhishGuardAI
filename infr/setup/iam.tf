@@ -262,3 +262,62 @@ resource "aws_iam_user_policy_attachment" "s3_cloudfront" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.s3_cloudfront.arn
 }
+
+# CloudWatch permissions
+
+data "aws_iam_policy_document" "cloudwatch" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutRetentionPolicy",
+      "logs:DeleteLogGroup",
+      "logs:TagLogGroup",
+      "logs:UntagLogGroup"
+    ]
+    resources = [
+      "arn:aws:logs:*:*:log-group:/aws/eks/phishguard-*",
+      "arn:aws:logs:*:*:log-group:/aws/cloudwatch/phishguard-*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:PutDashboard",
+      "cloudwatch:DeleteDashboards",
+      "cloudwatch:GetDashboard",
+      "cloudwatch:ListDashboards"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:CreateTopic",
+      "sns:DeleteTopic",
+      "sns:GetTopicAttributes",
+      "sns:SetTopicAttributes",
+      "sns:ListTopics"
+    ]
+    resources = ["arn:aws:sns:*:*:phishguard-*"]
+  }
+}
+
+resource "aws_iam_policy" "cloudwatch" {
+  name        = "${aws_iam_user.cd.name}-cloudwatch"
+  description = "Allow user to manage CloudWatch logs and alarms"
+  policy      = data.aws_iam_policy_document.cloudwatch.json
+}
+
+resource "aws_iam_user_policy_attachment" "cloudwatch" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.cloudwatch.arn
+}

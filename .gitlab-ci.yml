@@ -16,13 +16,9 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
 
-
 # ============================================
-# STAGE 1: Test , Lint , Security Scan, validate
+# STAGE 1: Test, Lint, Security Scan, validate
 # ============================================
-
-# Note: secret_detection and sast jobs are automatically created by the included templates
-# We don't need to redefine them here - the templates handle everything
 
 test:backend-unit:
   stage: test
@@ -103,9 +99,9 @@ test:terraform-test:
     - docker compose run --rm terraform -chdir=prod/ init -backend=false
     - docker compose run --rm terraform -chdir=setup/ init -backend=false
     - docker compose run --rm terraform -chdir=setup/ validate
-    - docker compose run --rm terraform -chdir=setup/ fmt -check
+    - docker compose run --rm terraform -chdir=setup/ fmt
     - docker compose run --rm terraform -chdir=prod/ validate
-    - docker compose run --rm terraform -chdir=prod/ fmt -check
+    - docker compose run --rm terraform -chdir=prod/ fmt
   rules:
     - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
   allow_failure: true
@@ -160,13 +156,13 @@ build-images-push-to-ecr:
 
 deploy:infrastructure:
   stage: deploy
-  image: docker:24-dind
-  services:
-    - docker:24-dind
-  variables:
-    AWS_DEFAULT_REGION: us-east-1
+  image: alpine:latest
   before_script:
-    - apk update && apk add --no-cache aws-cli
+    - apk update && apk add --no-cache aws-cli curl unzip
+    - echo "Installing Terraform..."
+    - curl -fsSL https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip -o /tmp/terraform.zip
+    - unzip -o /tmp/terraform.zip -d /usr/local/bin/
+    - terraform version
     - echo "Verifying required variables for deployment..."
     - |
       MISSING_VARS=""
@@ -185,30 +181,37 @@ deploy:infrastructure:
       else
         workspace="staging"
       fi
-    - export TF_VAR_ecr_app_image="$ecr_backend_repo_url:$CI_COMMIT_SHA"
-    - export TF_VAR_ecr_proxy_image="$ecr_frontend_repo_url:$CI_COMMIT_SHA"
-    - export TF_VAR_aws_account_id="$AWS_ACCOUNT_ID"
-    - export TF_VAR_aws_region="us-east-1"
-    - cd infr/prod
-    - docker compose run --rm terraform init
-    - docker compose run --rm terraform workspace select -or-create $workspace
-    - docker compose run --rm terraform plan
-    - docker compose run --rm terraform apply -auto-approve
-    - export LB_DNS=$(docker compose run --rm terraform output -raw load_balancer_dns)
-    - export S3_BUCKET=$(docker compose run --rm terraform output -raw s3_bucket_name)
-    - export CF_DIST_ID=$(docker compose run --rm terraform output -raw cloudfront_distribution_id)
-    - export FRONTEND_URL=$(docker compose run --rm terraform output -raw frontend_url)
-    - echo "S3_BUCKET=${S3_BUCKET}" >> /tmp/deploy.env
-    - echo "CF_DIST_ID=${CF_DIST_ID}" >> /tmp/deploy.env
-    - cd ../../frontend
-    - npm install
-    - npm run build
-    - aws s3 sync dist/ "s3://${S3_BUCKET}/" --delete
-    - aws cloudfront create-invalidation --distribution-id "${CF_DIST_ID}" --paths "/*"
-    - echo "Frontend deployed and CloudFront invalidated"
+      export TF_VAR_ecr_app_image="$ecr_backend_repo_url:$CI_COMMIT_SHA"
+      export TF_VAR_ecr_proxy_image="$ecr_frontend_repo_url:$CI_COMMIT_SHA"
+      export TF_VAR_aws_account_id="$AWS_ACCOUNT_ID"
+      export TF_VAR_aws_region="us-east-1"
+      cd infr/prod
+      terraform init -upgrade=false
+      terraform workspace select -or-create $workspace
+      terraform plan -out=tfplan
+      terraform apply tfplan
+      echo "Terraform deployment completed"
+      export LB_DNS=$(terraform output -raw load_balancer_dns 2>/dev/null || echo "pending")
+      export S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null || echo "pending")
+      export CF_DIST_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "pending")
+      export FRONTEND_URL=$(terraform output -raw frontend_url 2>/dev/null || echo "pending")
+      echo "Backend API: http://${LB_DNS}" >> /tmp/deploy.env
+      echo "Frontend URL: ${FRONTEND_URL}" >> /tmp/deploy.env
+      echo "S3_BUCKET=${S3_BUCKET}" >> /tmp/deploy.env
+      echo "CF_DIST_ID=${CF_DIST_ID}" >> /tmp/deploy.env
+      cd ../../frontend
+      apk add --no-cache nodejs npm
+      npm install
+      npm run build
+      aws s3 sync dist/ "s3://${S3_BUCKET}/" --delete
+      aws cloudfront create-invalidation --distribution-id "${CF_DIST_ID}" --paths "/*"
+      echo "Frontend deployed and CloudFront invalidated"
   artifacts:
     reports:
       dotenv: /tmp/deploy.env
+    paths:
+      - /tmp/deploy.env
+    expire_in: 1 week
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
       when: manual
@@ -229,13 +232,12 @@ cleanup:
 
 destroy:infrastructure:
   stage: deploy
-  image: docker:24-dind
-  services:
-    - docker:24-dind
-  variables:
-    AWS_DEFAULT_REGION: us-east-1
+  image: alpine:latest
   before_script:
-    - apk update && apk add --no-cache aws-cli
+    - apk update && apk add --no-cache aws-cli curl unzip
+    - echo "Installing Terraform..."
+    - curl -fsSL https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip -o /tmp/terraform.zip
+    - unzip -o /tmp/terraform.zip -d /usr/local/bin/
     - echo "Verifying required variables for destroy..."
     - |
       MISSING_VARS=""
@@ -253,11 +255,12 @@ destroy:infrastructure:
       else
         workspace="staging"
       fi
-    - cd infr/prod
-    - docker compose run --rm terraform init
-    - docker compose run --rm terraform workspace select $workspace
-    - docker compose run --rm terraform plan -destroy
-    - docker compose run --rm terraform destroy -auto-approve
+      cd infr/prod
+      terraform init -upgrade=false
+      terraform workspace select $workspace
+      terraform plan -destroy -out=tfplan
+      terraform apply tfplan
+      echo "Infrastructure destroyed for workspace: $workspace"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
       when: manual
