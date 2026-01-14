@@ -1,11 +1,11 @@
 # ============================================
 # CI/CD Pipeline - PhishGuardAI
-# Stages: testing → build and push then → deploy
+# Stages: test → build → deploy
 # ============================================
 
 stages:
-  - Test , Lint , Security Scan, validate
-  - build and push
+  - test
+  - build
   - deploy 
 
 # ============================================
@@ -115,7 +115,7 @@ test:terraform-test:
 # ============================================
 
 build:images-push-to-ecr:
-  stage: build and push
+  stage: build
   image: docker:24-dind
   services:
     - docker:24-dind
