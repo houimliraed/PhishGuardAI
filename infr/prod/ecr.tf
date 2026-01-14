@@ -1,7 +1,7 @@
 # ECR Repositories for Docker images
 
 resource "aws_ecr_repository" "backend" {
-  name                 = "${local.prefix}-backend"
+  name                 = "devopsml-backend"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -9,12 +9,12 @@ resource "aws_ecr_repository" "backend" {
   }
 
   tags = {
-    Name = "${local.prefix}-backend-repo"
+    Name = "devopsml-backend-repo"
   }
 }
 
 resource "aws_ecr_repository" "frontend" {
-  name                 = "${local.prefix}-frontend"
+  name                 = "devopsml-frontend"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -22,7 +22,7 @@ resource "aws_ecr_repository" "frontend" {
   }
 
   tags = {
-    Name = "${local.prefix}-frontend-repo"
+    Name = "devopsml-frontend-repo"
   }
 }
 
@@ -35,9 +35,9 @@ resource "aws_ecr_lifecycle_policy" "backend" {
       rulePriority = 1
       description  = "Keep last 10 images"
       selection = {
-        tagStatus   = "any"
-        countType   = "imageCountMoreThan"
-        countNumber = 10
+        tagStatus     = "any"
+        countType     = "imageCountMoreThan"
+        countNumber   = 10
       }
       action = {
         type = "expire"
@@ -54,9 +54,9 @@ resource "aws_ecr_lifecycle_policy" "frontend" {
       rulePriority = 1
       description  = "Keep last 10 images"
       selection = {
-        tagStatus   = "any"
-        countType   = "imageCountMoreThan"
-        countNumber = 10
+        tagStatus     = "any"
+        countType     = "imageCountMoreThan"
+        countNumber   = 10
       }
       action = {
         type = "expire"

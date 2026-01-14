@@ -53,11 +53,16 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:InitiateLayerUpload",
       "ecr:BatchCheckLayerAvailability",
       "ecr:PutImage",
-      "ecr:BatchGetImage"
+      "ecr:BatchGetImage",
+      "ecr:CreateRepository",
+      "ecr:DescribeRepositories",
+      "ecr:DeleteRepository",
+      "ecr:SetRepositoryPolicy",
+      "ecr:GetRepositoryPolicy",
+      "ecr:DeleteRepositoryPolicy"
     ]
     resources = [
-      "arn:aws:ecr:*:*:repository/phishguard-backend",
-      "arn:aws:ecr:*:*:repository/phishguard-frontend"
+      "arn:aws:ecr:*:*:repository/*"
     ]
   }
   statement {
