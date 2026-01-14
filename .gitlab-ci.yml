@@ -123,12 +123,21 @@ build-images-push-to-ecr:
     AWS_DEFAULT_REGION: us-east-1
   before_script:
     - apk update && apk add --no-cache aws-cli
-    - echo "Checking AWS credentials..."
+    - echo "Verifying required variables..."
     - |
-      if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-        echo "ERROR: AWS credentials not found"
+      MISSING_VARS=""
+      [ -z "$AWS_ACCESS_KEY_ID" ] && MISSING_VARS="$MISSING_VARS AWS_ACCESS_KEY_ID"
+      [ -z "$AWS_SECRET_ACCESS_KEY" ] && MISSING_VARS="$MISSING_VARS AWS_SECRET_ACCESS_KEY"
+      [ -z "$AWS_ACCOUNT_ID" ] && MISSING_VARS="$MISSING_VARS AWS_ACCOUNT_ID"
+      [ -z "$ecr_backend_repo_url" ] && MISSING_VARS="$MISSING_VARS ecr_backend_repo_url"
+      [ -z "$ecr_frontend_repo_url" ] && MISSING_VARS="$MISSING_VARS ecr_frontend_repo_url"
+      
+      if [ -n "$MISSING_VARS" ]; then
+        echo "ERROR: Missing required GitLab CI/CD variables:$MISSING_VARS"
+        echo "Please add these variables in: Settings > CI/CD > Variables"
         exit 1
       fi
+    - echo "All required variables are present"
   script:
     - echo "Logging into AWS ECR..."
     - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
@@ -143,8 +152,6 @@ build-images-push-to-ecr:
     - echo "Build and push completed successfully"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
   allow_failure: false
 
 # ============================================
