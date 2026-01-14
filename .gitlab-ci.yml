@@ -192,6 +192,11 @@ deploy:infrastructure:
     - docker compose run --rm terraform workspace select -or-create $workspace
     - docker compose run --rm terraform plan
     - docker compose run --rm terraform apply -auto-approve
+    - export LB_DNS=$(docker compose run --rm terraform output -raw load_balancer_dns)
+    - echo "LB_DNS=${LB_DNS}" >> /tmp/deploy.env
+  artifacts:
+    reports:
+      dotenv: /tmp/deploy.env
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
       when: manual
