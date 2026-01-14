@@ -187,6 +187,8 @@ deploy:infrastructure:
       fi
     - export TF_VAR_ecr_app_image="$ecr_backend_repo_url:$CI_COMMIT_SHA"
     - export TF_VAR_ecr_proxy_image="$ecr_frontend_repo_url:$CI_COMMIT_SHA"
+    - export TF_VAR_aws_account_id="$AWS_ACCOUNT_ID"
+    - export TF_VAR_aws_region="us-east-1"
     - cd infr/prod
     - docker compose run --rm terraform init
     - docker compose run --rm terraform workspace select -or-create $workspace

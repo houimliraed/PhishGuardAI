@@ -56,8 +56,8 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:BatchGetImage"
     ]
     resources = [
-      aws_ecr_repository.devopsml_backend.arn,
-      aws_ecr_repository.devopsml_frontend.arn
+      "arn:aws:ecr:*:*:repository/phishguard-backend",
+      "arn:aws:ecr:*:*:repository/phishguard-frontend"
     ]
   }
   statement {

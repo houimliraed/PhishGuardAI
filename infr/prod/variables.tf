@@ -18,6 +18,12 @@ variable "ecr_app_image" {
   type        = string
 }
 
+variable "ecr_proxy_image" {
+  description = "ECR image URL for the frontend (unused, for CI compatibility)"
+  type        = string
+  default     = ""
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -37,6 +43,12 @@ variable "frontend_domain_name" {
 
 variable "route53_zone_id" {
   description = "Route53 zone ID for DNS records (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "tf_state_bucket" {
+  description = "S3 bucket for Terraform state"
   type        = string
   default     = ""
 }
