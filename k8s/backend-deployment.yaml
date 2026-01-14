@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishguard-backend
+  namespace: phishguard
+  labels:
+    app: phishguard-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: phishguard-backend
+  template:
+    metadata:
+      labels:
+        app: phishguard-backend
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      containers:
+        - name: backend
+          image: ${ECR_APP_IMAGE}  # Will be replaced by Terraform
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
