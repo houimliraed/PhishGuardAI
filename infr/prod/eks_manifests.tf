@@ -139,9 +139,9 @@ resource "kubernetes_ingress_v1" "backend" {
     name      = "phishguard-backend-ingress"
     namespace = kubernetes_namespace.phishguard.metadata[0].name
     annotations = {
-      "kubernetes.io/ingress.class"                = "alb"
-      "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"      = "ip"
+      "kubernetes.io/ingress.class"           = "alb"
+      "alb.ingress.kubernetes.io/scheme"      = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type" = "ip"
     }
   }
 

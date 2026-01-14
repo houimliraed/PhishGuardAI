@@ -6,7 +6,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name                                           = "${local.prefix}-vpc"
+    Name                                        = "${local.prefix}-vpc"
     "kubernetes.io/cluster/${local.prefix}-eks" = "shared"
   }
 }
@@ -30,7 +30,7 @@ resource "aws_subnet" "public_a" {
   availability_zone       = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name                                           = "${local.prefix}-public-a"
+    Name                                        = "${local.prefix}-public-a"
     "kubernetes.io/cluster/${local.prefix}-eks" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
@@ -62,7 +62,7 @@ resource "aws_subnet" "public_b" {
   availability_zone       = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name                                           = "${local.prefix}-public-b"
+    Name                                        = "${local.prefix}-public-b"
     "kubernetes.io/cluster/${local.prefix}-eks" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
@@ -94,7 +94,7 @@ resource "aws_subnet" "private_a" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name                                           = "${local.prefix}-private-a"
+    Name                                        = "${local.prefix}-private-a"
     "kubernetes.io/cluster/${local.prefix}-eks" = "shared"
     "kubernetes.io/role/internal-elb"           = "1"
   }
@@ -106,7 +106,7 @@ resource "aws_subnet" "private_b" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name                                           = "${local.prefix}-private-b"
+    Name                                        = "${local.prefix}-private-b"
     "kubernetes.io/cluster/${local.prefix}-eks" = "shared"
     "kubernetes.io/role/internal-elb"           = "1"
   }
