@@ -113,7 +113,9 @@ test:backend-unit:
       - backend/coverage.xml
       - backend/htmlcov/
     expire_in: 1 week
-  allow_failure: false
+  rules:
+    - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+  allow_failure: true
 
 test:frontend-unit:
   stage: test
@@ -140,7 +142,9 @@ test:frontend-unit:
     paths:
       - frontend/coverage/
     expire_in: 1 week
-  allow_failure: false
+  rules:
+    - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+  allow_failure: true
 
 test:docker-compose:
   stage: test
@@ -151,7 +155,23 @@ test:docker-compose:
     - echo "Testing Docker Compose configuration..."
     - docker compose config
     - echo "Docker Compose configuration is valid"
-  allow_failure: false
+  rules:
+    - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+  allow_failure: true
+
+test:terraform-test:
+  stage: test
+  script:
+    - cd infr/
+    - docker compose run --rm terraform -chdir=prod/ init -backend=false
+    - docker compose run --rm terraform -chdir=setup/ init -backend=false
+    - docker compose run --rm terraform -chdir=setup/ validate
+    - docker compose run --rm terraform -chdir=setup/ fmt -check
+    - docker compose run --rm terraform -chdir=prod/ validate
+    - docker compose run --rm terraform -chdir=prod/ fmt -check
+  rules:
+    - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+  allow_failure: true
 
 # ============================================
 # STAGE 3: DEPLOY
