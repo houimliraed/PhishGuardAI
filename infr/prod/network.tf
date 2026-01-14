@@ -147,19 +147,11 @@ resource "aws_security_group" "eks_worker_nodes" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "Allow worker to worker communication"
-    from_port       = 0
+    description     = "Allow control plane to worker communication"
+    from_port       = 1025
     to_port         = 65535
     protocol        = "tcp"
-    security_groups = [aws_security_group.eks_worker_nodes.id]
-  }
-
-  ingress {
-    description = "Allow control plane to worker communication"
-    from_port   = 1025
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block]
+    cidr_blocks     = [aws_vpc.main.cidr_block]
   }
 
   ingress {
@@ -180,6 +172,17 @@ resource "aws_security_group" "eks_worker_nodes" {
   tags = {
     Name = "${local.prefix}-eks-worker-nodes-sg"
   }
+}
+
+# Separate rule for worker-to-worker communication to avoid self-reference
+resource "aws_security_group_rule" "worker_to_worker" {
+  type                     = "ingress"
+  description              = "Allow worker to worker communication"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.eks_worker_nodes.id
+  source_security_group_id = aws_security_group.eks_worker_nodes.id
 }
 
 # endpoints to allow EKS accessing ECR, CloudWatch and Systems Manager
