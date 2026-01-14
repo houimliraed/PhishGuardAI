@@ -360,3 +360,137 @@ resource "aws_iam_user_policy_attachment" "cloudwatch" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.cloudwatch.arn
 }
+
+# Additional permissions for CloudWatch, IAM, and other services
+
+data "aws_iam_policy_document" "additional_perms" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutRetentionPolicy",
+      "logs:DeleteLogGroup",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:TagLogGroup",
+      "logs:UntagLogGroup"
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudwatch:ListTagsForResource",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:PutDashboard",
+      "cloudwatch:DeleteDashboards",
+      "cloudwatch:GetDashboard",
+      "cloudwatch:ListDashboards"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:TagResource",
+      "sns:UntagResource",
+      "sns:CreateTopic",
+      "sns:DeleteTopic",
+      "sns:GetTopicAttributes",
+      "sns:SetTopicAttributes",
+      "sns:ListTopics"
+    ]
+    resources = ["arn:aws:sns:*:*:*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:GetRole",
+      "iam:PassRole",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:CreateServiceLinkedRole"
+    ]
+    resources = ["arn:aws:iam::*:*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcAttribute",
+      "ec2:ModifyVpcAttribute",
+      "ec2:TagResource",
+      "ec2:UntagResource"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketTagging",
+      "s3:PutBucketTagging",
+      "s3:DeleteBucketTagging"
+    ]
+    resources = ["arn:aws:s3:::*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudfront:CreateCloudFrontOriginAccessIdentity",
+      "cloudfront:DeleteCloudFrontOriginAccessIdentity",
+      "cloudfront:GetCloudFrontOriginAccessIdentity",
+      "cloudfront:TagResource",
+      "cloudfront:UntagResource"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "acm:RequestCertificate",
+      "acm:DescribeCertificate",
+      "acm:DeleteCertificate",
+      "acm:ListCertificates",
+      "acm:TagResource",
+      "acm:UntagResource"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:TagResource",
+      "ecr:UntagResource"
+    ]
+    resources = ["arn:aws:ecr:*:*:repository/*"]
+  }
+}
+
+resource "aws_iam_policy" "additional_perms" {
+  name        = "${aws_iam_user.cd.name}-additional"
+  description = "Additional permissions for full deployment"
+  policy      = data.aws_iam_policy_document.additional_perms.json
+}
+
+resource "aws_iam_user_policy_attachment" "additional_perms" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.additional_perms.arn
+}
