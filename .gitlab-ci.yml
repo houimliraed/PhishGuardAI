@@ -1,23 +1,12 @@
 # ============================================
 # CI/CD Pipeline - PhishGuardAI
-# Stages: build → test → deploy
+# Stages: testing → build and push then → deploy
 # ============================================
 
 stages:
-  - build
-  - test
-  - deploy
-
-# ============================================
-# Global Variables
-# ============================================
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "/certs"
-  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
-  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
-  BACKEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend:latest
-  FRONTEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend:latest
+  - Test , Lint , Security Scan, validate
+  - build and push
+  - deploy 
 
 # ============================================
 # Templates for Security Scanning
@@ -27,66 +16,9 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
 
-# ============================================
-# STAGE 1: BUILD
-# ============================================
-
-build:backend:
-  stage: build
-  image: docker:24-dind
-  services:
-    - docker:24-dind
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
-    - echo "Building backend Docker image..."
-    - touch build.env  # Create build.env file
-    - docker build -t $BACKEND_IMAGE -t $BACKEND_IMAGE_LATEST ./backend
-    - docker push $BACKEND_IMAGE
-    - docker push $BACKEND_IMAGE_LATEST
-    - echo "Backend image built successfully"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  cache:
-    key: backend-build-cache
-    paths:
-      - backend/.cache
-  artifacts:
-    reports:
-      dotenv: build.env
-    expire_in: 1 week
-  allow_failure: true
-
-build:frontend:
-  stage: build
-  image: docker:24-dind
-  services:
-    - docker:24-dind
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
-    - echo "Building frontend Docker image..."
-    - touch build.env  # Create build.env file
-    - docker build -t $FRONTEND_IMAGE -t $FRONTEND_IMAGE_LATEST ./frontend
-    - docker push $FRONTEND_IMAGE
-    - docker push $FRONTEND_IMAGE_LATEST
-    - echo "Frontend build successful"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  cache:
-    key: frontend-build-cache
-    paths:
-      - frontend/node_modules
-  artifacts:
-    reports:
-      dotenv: build.env
-    expire_in: 1 week
-  allow_failure: true
 
 # ============================================
-# STAGE 2: TEST
+# STAGE 1: Test , Lint , Security Scan, validate
 # ============================================
 
 # Note: secret_detection and sast jobs are automatically created by the included templates
@@ -177,6 +109,31 @@ test:terraform-test:
   rules:
     - if: "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|prod)$/ || $CI_COMMIT_BRANCH =~ /^(main|prod)$/"
   allow_failure: true
+
+# ============================================
+# STAGE 2: BUILD AND PUSH
+# ============================================
+
+build:images-push-to-ecr:
+  stage: build and push
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  script:
+    - apk update && apk add aws-cli
+    - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+    - docker build --compress -t $ecr_backend_repo_url:$CI_COMMIT_SHA .
+    - docker push $ecr_backend_repo_url:$CI_COMMIT_SHA
+    - docker build --compress -t $ecr_frontend_repo_url:$CI_COMMIT_SHA proxy/
+    - docker push $ecr_frontend_repo_url:$CI_COMMIT_SHA
+  rules:
+    - if: "$CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+  allow_failure: false
+
+
+
+
+
 
 # ============================================
 # STAGE 3: DEPLOY
