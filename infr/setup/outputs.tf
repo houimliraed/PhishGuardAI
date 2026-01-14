@@ -10,3 +10,12 @@ output "cd_user_access_key_secret" {
   sensitive   = true
 }
 
+# outputs
+output "ecr_backend_repo_url" {
+  value       = aws_ecr_repository.devopsml_backend.repository_url
+  description = "The URL of the ECR repository for the backend"
+}
+output "ecr_frontend_repo_url" {
+  value       = aws_ecr_repository.devopsml_frontend.repository_url
+  description = "The URL of the ECR repository for the frontend"
+}

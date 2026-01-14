@@ -43,7 +43,7 @@ resource "aws_iam_user_policy_attachment" "tf_backend" {
 }
 #### policy for ecr repo
 
-/* data "aws_iam_policy_document" "ecr" {
+data "aws_iam_policy_document" "ecr" {
 
   statement {
     effect = "Allow"
@@ -56,7 +56,8 @@ resource "aws_iam_user_policy_attachment" "tf_backend" {
       "ecr:BatchGetImage"
     ]
     resources = [
-      aws_ecr_repository.onlinesocial_backend.arn
+      aws_ecr_repository.devopsml_backend.arn,
+      aws_ecr_repository.devopsml_frontend.arn
     ]
   }
   statement {
@@ -65,19 +66,18 @@ resource "aws_iam_user_policy_attachment" "tf_backend" {
     resources = ["*"]
   }
 
-} */
+}
 
-/* resource "aws_iam_policy" "ecr" {
+resource "aws_iam_policy" "ecr" {
   name        = "${aws_iam_user.cd.name}-ecr"
-  description = "Allow the cd user for the ecr repo of the backend"
+  description = "Allow the cd user for the ecr repos"
   policy      = data.aws_iam_policy_document.ecr.json
 }
 
 resource "aws_iam_user_policy_attachment" "ecr" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.ecr.arn
-
-} */
+}
 
 # networking permissions
 
@@ -137,5 +137,4 @@ resource "aws_iam_policy" "ec2" {
 resource "aws_iam_user_policy_attachment" "ec2" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.ec2.arn
-}
- */
+} */
