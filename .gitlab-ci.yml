@@ -122,9 +122,9 @@ build-images-push-to-ecr:
   script:
     - apk update && apk add aws-cli
     - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
-    - docker build --compress -t $ecr_backend_repo_url:$CI_COMMIT_SHA .
+    - docker build --compress -t $ecr_backend_repo_url:$CI_COMMIT_SHA ./backend
     - docker push $ecr_backend_repo_url:$CI_COMMIT_SHA
-    - docker build --compress -t $ecr_frontend_repo_url:$CI_COMMIT_SHA proxy/
+    - docker build --compress -t $ecr_frontend_repo_url:$CI_COMMIT_SHA ./frontend
     - docker push $ecr_frontend_repo_url:$CI_COMMIT_SHA
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
