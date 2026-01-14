@@ -40,6 +40,7 @@ build:backend:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     - echo "Building backend Docker image..."
+    - touch build.env  # Create build.env file
     - docker build -t $BACKEND_IMAGE -t $BACKEND_IMAGE_LATEST ./backend
     - docker push $BACKEND_IMAGE
     - docker push $BACKEND_IMAGE_LATEST
@@ -66,6 +67,7 @@ build:frontend:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     - echo "Building frontend Docker image..."
+    - touch build.env  # Create build.env file
     - docker build -t $FRONTEND_IMAGE -t $FRONTEND_IMAGE_LATEST ./frontend
     - docker push $FRONTEND_IMAGE
     - docker push $FRONTEND_IMAGE_LATEST
@@ -161,6 +163,9 @@ test:docker-compose:
 
 test:terraform-test:
   stage: test
+  image: docker:24-dind  
+  services:
+    - docker:24-dind  
   script:
     - cd infr/
     - docker compose run --rm terraform -chdir=prod/ init -backend=false
