@@ -119,13 +119,28 @@ build-images-push-to-ecr:
   image: docker:24-dind
   services:
     - docker:24-dind
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+  before_script:
+    - apk update && apk add --no-cache aws-cli
+    - echo "Checking AWS credentials..."
+    - |
+      if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+        echo "ERROR: AWS credentials not found"
+        exit 1
+      fi
   script:
-    - apk update && apk add aws-cli
+    - echo "Logging into AWS ECR..."
     - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+    - echo "Building backend image..."
     - docker build --compress -t $ecr_backend_repo_url:$CI_COMMIT_SHA ./backend
+    - echo "Pushing backend image..."
     - docker push $ecr_backend_repo_url:$CI_COMMIT_SHA
+    - echo "Building frontend image..."
     - docker build --compress -t $ecr_frontend_repo_url:$CI_COMMIT_SHA ./frontend
+    - echo "Pushing frontend image..."
     - docker push $ecr_frontend_repo_url:$CI_COMMIT_SHA
+    - echo "Build and push completed successfully"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
