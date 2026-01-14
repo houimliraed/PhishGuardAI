@@ -127,7 +127,9 @@ build-images-push-to-ecr:
     - docker build --compress -t $ecr_frontend_repo_url:$CI_COMMIT_SHA proxy/
     - docker push $ecr_frontend_repo_url:$CI_COMMIT_SHA
   rules:
-    - if: "$CI_COMMIT_BRANCH =~ /^(main|prod)$/"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
   allow_failure: false
 
 # ============================================

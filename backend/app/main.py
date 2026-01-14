@@ -1,36 +1,33 @@
 from fastapi import FastAPI
-from app.api.predict import router as predict_router
 from fastapi.middleware.cors import CORSMiddleware
-
-
+from app.api import predict, analytics, extract, health, user
 
 app = FastAPI(
-    title="AI URL phishing detector",
-    version="1.0",
-    description="API for testing phishing URLs using ML",
+    title="PhishGuard AI API",
+    description="API for phishing URL detection",
+    version="1.0.0"
 )
 
-# Allow known dev origins (Vite defaults to 5173) without wildcard when using credentials
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-app.include_router(predict_router, prefix="/api", tags=["Predict"])
+# Include routers
+app.include_router(predict.router, prefix="", tags=["prediction"])
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+app.include_router(extract.router, prefix="/extract", tags=["extract"])
+app.include_router(health.router, prefix="/health", tags=["health"])
+app.include_router(user.router, prefix="/user", tags=["user"])
 
 @app.get("/")
-def root():
-    return {"message": "Phishing Detection API is running"}
+async def root():
+    return {
+        "message": "Welcome to PhishGuard AI API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }

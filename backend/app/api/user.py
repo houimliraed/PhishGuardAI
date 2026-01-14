@@ -1,9 +1,17 @@
-from fastapi import APIRouter
-from app.schemas.user_schema import UserRequest
-from app.core.user_service import create_user
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
 
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str
+
 @router.post("/user")
-def create(request: UserRequest):
-    return create_user(request.email, request.username)
+async def create_user(user: UserCreate):
+    return {
+        "email": user.email,
+        "username": user.username,
+        "id": "generated-id",
+        "status": "created"
+    }

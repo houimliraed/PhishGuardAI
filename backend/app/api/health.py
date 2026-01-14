@@ -2,6 +2,9 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.get("/health")
-def health_check():
-    return {"status": "healthy", "message": "Service is running"}
+@router.get("")
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "PhishGuard AI"
+    }

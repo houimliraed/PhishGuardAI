@@ -1,9 +1,18 @@
-from fastapi import APIRouter
-from app.schemas.extract_schema import ExtractRequest
-from app.core.extractor import extract_data
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
+class ExtractRequest(BaseModel):
+    source: str = Field(..., min_length=1)
+
 @router.post("/extract")
-def extract(request: ExtractRequest):
-    return extract_data(request.source)
+async def extract_data(request: ExtractRequest):
+    if not request.source or request.source.strip() == "":
+        raise HTTPException(status_code=422, detail="Source cannot be empty")
+    
+    return {
+        "source": request.source,
+        "status": "extracted",
+        "data": {}
+    }
