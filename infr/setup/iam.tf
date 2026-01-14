@@ -48,27 +48,37 @@ data "aws_iam_policy_document" "ecr" {
   statement {
     effect = "Allow"
     actions = [
-      "ecr:CompleteLayerUpload",
-      "ecr:UploadLayerPart",
-      "ecr:InitiateLayerUpload",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:PutImage",
+      "ecr:GetAuthorizationToken"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ecr:BatchGetImage",
-      "ecr:CreateRepository",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetLifecyclePolicy",
+      "ecr:PutLifecyclePolicy",
+      "ecr:PreviewLifecyclePolicy",
+      "ecr:ListTagsForResource",
+      "ecr:TagResource",
+      "ecr:UntagResource",
       "ecr:DescribeRepositories",
+      "ecr:ListImages",
+      "ecr:DescribeImages",
+      "ecr:CreateRepository",
       "ecr:DeleteRepository",
       "ecr:SetRepositoryPolicy",
       "ecr:GetRepositoryPolicy",
       "ecr:DeleteRepositoryPolicy"
     ]
-    resources = [
-      "arn:aws:ecr:*:*:repository/*"
-    ]
-  }
-  statement {
-    effect    = "Allow"
-    actions   = ["ecr:GetAuthorizationToken"]
-    resources = ["*"]
+    resources = ["arn:aws:ecr:*:*:repository/*"]
   }
 
 }
