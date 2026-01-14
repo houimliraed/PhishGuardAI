@@ -43,7 +43,7 @@ resource "aws_iam_user_policy_attachment" "tf_backend" {
 }
 #### policy for ecr repo
 
-data "aws_iam_policy_document" "ecr" {
+/* data "aws_iam_policy_document" "ecr" {
 
   statement {
     effect = "Allow"
@@ -65,9 +65,9 @@ data "aws_iam_policy_document" "ecr" {
     resources = ["*"]
   }
 
-}
+} */
 
-resource "aws_iam_policy" "ecr" {
+/* resource "aws_iam_policy" "ecr" {
   name        = "${aws_iam_user.cd.name}-ecr"
   description = "Allow the cd user for the ecr repo of the backend"
   policy      = data.aws_iam_policy_document.ecr.json
@@ -77,11 +77,11 @@ resource "aws_iam_user_policy_attachment" "ecr" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.ecr.arn
 
-}
+} */
 
 # networking permissions
 
-data "aws_iam_policy_document" "ec2" {
+/* data "aws_iam_policy_document" "ec2" {
   statement {
     effect = "Allow"
     actions = [
@@ -138,3 +138,4 @@ resource "aws_iam_user_policy_attachment" "ec2" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.ec2.arn
 }
+ */
