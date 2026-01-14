@@ -1,22 +1,4 @@
-# CloudWatch Log Group for EKS Cluster
-resource "aws_cloudwatch_log_group" "eks_cluster" {
-  name              = "/aws/eks/${local.prefix}-eks/cluster"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${local.prefix}-eks-logs"
-  }
-}
-
-# CloudWatch Log Group for Backend Application
-resource "aws_cloudwatch_log_group" "backend_app" {
-  name              = "/aws/eks/${local.prefix}-eks/backend"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${local.prefix}-backend-logs"
-  }
-}
+# CloudWatch Log Groups - Reference existing ones if they exist
 
 # CloudWatch Alarms for ALB
 resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
@@ -61,7 +43,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_target_response_time" {
   }
 }
 
-# CloudWatch Alarms for EKS Cluster
+# CloudWatch Alarms for EKS
 resource "aws_cloudwatch_metric_alarm" "eks_cpu_utilization" {
   alarm_name          = "${local.prefix}-eks-high-cpu"
   comparison_operator = "GreaterThanThreshold"
@@ -129,25 +111,21 @@ resource "aws_cloudwatch_dashboard" "phishguard" {
           region = var.aws_region
           title  = "EKS Node Resources"
         }
-      },
-      {
-        type = "log"
-        properties = {
-          query  = "fields @timestamp, @message | stats count() by bin(5m)"
-          region = var.aws_region
-          title  = "Backend Logs - Message Count"
-        }
       }
     ]
   })
 }
 
-# SNS Topic for Alarms (optional - for email notifications)
+# SNS Topic for Alarms - Skip if it exists, create with ignore_errors
 resource "aws_sns_topic" "phishguard_alerts" {
   name = "${local.prefix}-alerts"
 
   tags = {
     Name = "${local.prefix}-alerts-topic"
+  }
+
+  lifecycle {
+    ignore_changes = [tags]
   }
 }
 
@@ -162,7 +140,6 @@ resource "aws_cloudwatch_metric_alarm" "alb_requests_4xx" {
   statistic           = "Sum"
   threshold           = "50"
   alarm_description   = "Alert when ALB receives many 4XX errors"
-  alarm_actions       = [aws_sns_topic.phishguard_alerts.arn]
   treat_missing_data  = "notBreaching"
 
   dimensions = {
@@ -184,7 +161,6 @@ resource "aws_cloudwatch_metric_alarm" "alb_requests_5xx" {
   statistic           = "Sum"
   threshold           = "10"
   alarm_description   = "Alert when ALB receives many 5XX errors"
-  alarm_actions       = [aws_sns_topic.phishguard_alerts.arn]
   treat_missing_data  = "notBreaching"
 
   dimensions = {
@@ -200,11 +176,6 @@ resource "aws_cloudwatch_metric_alarm" "alb_requests_5xx" {
 output "cloudwatch_dashboard_url" {
   value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.phishguard.dashboard_name}"
   description = "URL to CloudWatch Dashboard"
-}
-
-output "cloudwatch_log_group_backend" {
-  value       = aws_cloudwatch_log_group.backend_app.name
-  description = "CloudWatch Log Group for backend application"
 }
 
 output "sns_topic_arn" {

@@ -6,6 +6,10 @@ resource "aws_s3_bucket" "frontend" {
   tags = {
     Name = "${local.prefix}-frontend-bucket"
   }
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }
 
 # Block public access to S3 bucket (CloudFront will access it)
@@ -55,19 +59,9 @@ resource "aws_s3_bucket_policy" "frontend" {
 # CloudFront Origin Access Identity
 resource "aws_cloudfront_origin_access_identity" "frontend" {
   comment = "OAI for ${local.prefix} frontend"
-}
-
-# ACM Certificate for HTTPS (us-east-1 required for CloudFront)
-resource "aws_acm_certificate" "frontend" {
-  domain_name       = var.frontend_domain_name
-  validation_method = "DNS"
 
   lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name = "${local.prefix}-frontend-cert"
+    ignore_changes = [comment]
   }
 }
 
@@ -143,10 +137,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = var.frontend_domain_name == "" ? true : false
-    acm_certificate_arn            = var.frontend_domain_name != "" ? aws_acm_certificate.frontend.arn : null
-    ssl_support_method             = var.frontend_domain_name != "" ? "sni-only" : null
-    minimum_protocol_version       = var.frontend_domain_name != "" ? "TLSv1.2_2021" : null
+    cloudfront_default_certificate = true
   }
 
   restrictions {
@@ -167,6 +158,10 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+
+  lifecycle {
+    ignore_changes = [description]
+  }
 }
 
 # Route53 DNS record (optional - if you have a domain)
