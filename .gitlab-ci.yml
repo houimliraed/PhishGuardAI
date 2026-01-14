@@ -114,7 +114,7 @@ test:terraform-test:
 # STAGE 2: BUILD AND PUSH
 # ============================================
 
-build:images-push-to-ecr:
+build-images-push-to-ecr:
   stage: build
   image: docker:24-dind
   services:
@@ -129,11 +129,6 @@ build:images-push-to-ecr:
   rules:
     - if: "$CI_COMMIT_BRANCH =~ /^(main|prod)$/"
   allow_failure: false
-
-
-
-
-
 
 # ============================================
 # STAGE 3: DEPLOY
