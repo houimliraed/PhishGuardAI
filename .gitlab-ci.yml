@@ -158,49 +158,42 @@ build-images-push-to-ecr:
 # STAGE 3: DEPLOY
 # ============================================
 
-deploy:staging:
+deploy:infrastructure:
   stage: deploy
-  image: alpine:latest
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
   before_script:
-    - apk add --no-cache curl
+    - apk update && apk add --no-cache aws-cli
+    - echo "Verifying required variables for deployment..."
+    - |
+      MISSING_VARS=""
+      [ -z "$AWS_ACCESS_KEY_ID" ] && MISSING_VARS="$MISSING_VARS AWS_ACCESS_KEY_ID"
+      [ -z "$AWS_SECRET_ACCESS_KEY" ] && MISSING_VARS="$MISSING_VARS AWS_SECRET_ACCESS_KEY"
+      [ -z "$AWS_ACCOUNT_ID" ] && MISSING_VARS="$MISSING_VARS AWS_ACCOUNT_ID"
+      
+      if [ -n "$MISSING_VARS" ]; then
+        echo "ERROR: Missing required GitLab CI/CD variables:$MISSING_VARS"
+        exit 1
+      fi
   script:
-    - echo "Deploying to staging environment..."
-    - echo "Backend image - $BACKEND_IMAGE"
-    - echo "Frontend image - $FRONTEND_IMAGE"
-    - echo "Deployment preparation completed"
-    - echo "DEPLOYMENT_URL=https://staging.phishguard.example.com" >> deploy.env
-  environment:
-    name: staging
-    url: https://staging.phishguard.example.com
-  artifacts:
-    reports:
-      dotenv: deploy.env
-    expire_in: 1 week
+    - |
+      if [[ $CI_COMMIT_BRANCH == 'prod' ]]; then
+        workspace="prod"
+      else
+        workspace="staging"
+      fi
+    - export TF_VAR_ecr_app_image="$ecr_backend_repo_url:$CI_COMMIT_SHA"
+    - export TF_VAR_ecr_proxy_image="$ecr_frontend_repo_url:$CI_COMMIT_SHA"
+    - cd infr/prod
+    - docker compose run --rm terraform init
+    - docker compose run --rm terraform workspace select -or-create $workspace
+    - docker compose run --rm terraform plan
+    - docker compose run --rm terraform apply -auto-approve
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: manual
-  allow_failure: false
-
-deploy:production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache curl
-  script:
-    - echo "Deploying to production environment..."
-    - echo "Backend image - $BACKEND_IMAGE"
-    - echo "Frontend image - $FRONTEND_IMAGE"
-    - echo "Production deployment preparation completed"
-    - echo "DEPLOYMENT_URL=https://phishguard.example.com" >> deploy.env
-  environment:
-    name: production
-    url: https://phishguard.example.com
-  artifacts:
-    reports:
-      dotenv: deploy.env
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
       when: manual
   allow_failure: false
 
@@ -216,3 +209,39 @@ cleanup:
     - echo "Cleanup completed"
   when: on_success
   allow_failure: true
+
+destroy:infrastructure:
+  stage: deploy
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+  before_script:
+    - apk update && apk add --no-cache aws-cli
+    - echo "Verifying required variables for destroy..."
+    - |
+      MISSING_VARS=""
+      [ -z "$AWS_ACCESS_KEY_ID" ] && MISSING_VARS="$MISSING_VARS AWS_ACCESS_KEY_ID"
+      [ -z "$AWS_SECRET_ACCESS_KEY" ] && MISSING_VARS="$MISSING_VARS AWS_SECRET_ACCESS_KEY"
+      
+      if [ -n "$MISSING_VARS" ]; then
+        echo "ERROR: Missing required GitLab CI/CD variables:$MISSING_VARS"
+        exit 1
+      fi
+  script:
+    - |
+      if [[ $CI_COMMIT_BRANCH == 'prod' ]]; then
+        workspace="prod"
+      else
+        workspace="staging"
+      fi
+    - cd infr/prod
+    - docker compose run --rm terraform init
+    - docker compose run --rm terraform workspace select $workspace
+    - docker compose run --rm terraform plan -destroy
+    - docker compose run --rm terraform destroy -auto-approve
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "prod"
+      when: manual
+  allow_failure: false

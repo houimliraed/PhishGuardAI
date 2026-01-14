@@ -79,62 +79,106 @@ resource "aws_iam_user_policy_attachment" "ecr" {
   policy_arn = aws_iam_policy.ecr.arn
 }
 
-# networking permissions
+# EKS permissions
 
-/* data "aws_iam_policy_document" "ec2" {
+data "aws_iam_policy_document" "eks" {
   statement {
     effect = "Allow"
     actions = [
-      "ec2:DescribeAvailabilityZones",
-      "ec2:DescribeRegions",
-      "ec2:DescribeVpcs",
-      "ec2:CreateTags",
-      "ec2:CreateVpc",
-      "ec2:DeleteVpc",
-      "ec2:DescribeSecurityGroups",
-      "ec2:DeleteSubnet",
-      "ec2:DeleteSecurityGroup",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DetachInternetGateway",
-      "ec2:DescribeInternetGateways",
-      "ec2:DeleteInternetGateway",
-      "ec2:DetachNetworkInterface",
-      "ec2:DescribeVpcEndpoints",
-      "ec2:DescribeRouteTables",
-      "ec2:DeleteRouteTable",
-      "ec2:DeleteVpcEndpoints",
-      "ec2:DisassociateRouteTable",
-      "ec2:DeleteRoute",
-      "ec2:DescribePrefixLists",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeVpcAttribute",
-      "ec2:DescribeNetworkAcls",
-      "ec2:AssociateRouteTable",
-      "ec2:AuthorizeSecurityGroupIngress",
-      "ec2:RevokeSecurityGroupEgress",
+      "eks:CreateCluster",
+      "eks:DeleteCluster",
+      "eks:DescribeCluster",
+      "eks:ListClusters",
+      "eks:UpdateClusterConfig",
+      "eks:CreateNodegroup",
+      "eks:DeleteNodegroup",
+      "eks:DescribeNodegroup",
+      "eks:ListNodegroups",
+      "eks:UpdateNodegroupConfig",
+      "eks:TagResource",
+      "eks:UntagResource",
+      "eks:ListTagsForResource"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:GetRole",
+      "iam:PassRole",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:CreateServiceLinkedRole"
+    ]
+    resources = [
+      "arn:aws:iam::*:role/phishguard-*",
+      "arn:aws:iam::*:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ec2:CreateSecurityGroup",
-      "ec2:AuthorizeSecurityGroupEgress",
-      "ec2:CreateVpcEndpoint",
-      "ec2:ModifySubnetAttribute",
-      "ec2:CreateSubnet",
-      "ec2:CreateRoute",
-      "ec2:CreateRouteTable",
-      "ec2:CreateInternetGateway",
-      "ec2:AttachInternetGateway",
-      "ec2:ModifyVpcAttribute",
+      "ec2:DeleteSecurityGroup",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:AuthorizeSecurityGroupIngress",
       "ec2:RevokeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:CreateTags",
+      "ec2:DeleteTags",
+      "ec2:DescribeTags",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeInstances"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:TagLogGroup",
+      "logs:UntagLogGroup"
+    ]
+    resources = ["arn:aws:logs:*:*:log-group:/aws/eks/phishguard-*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "autoscaling:CreateAutoScalingGroup",
+      "autoscaling:DeleteAutoScalingGroup",
+      "autoscaling:DescribeAutoScalingGroups",
+      "autoscaling:UpdateAutoScalingGroup",
+      "autoscaling:CreateLaunchConfiguration",
+      "autoscaling:DeleteLaunchConfiguration",
+      "autoscaling:DescribeLaunchConfigurations"
     ]
     resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "ec2" {
-  name        = "${aws_iam_user.cd.name}-ec2"
-  description = "Allow user to manage EC2 resources."
-  policy      = data.aws_iam_policy_document.ec2.json
+resource "aws_iam_policy" "eks" {
+  name        = "${aws_iam_user.cd.name}-eks"
+  description = "Allow user to manage EKS clusters and resources"
+  policy      = data.aws_iam_policy_document.eks.json
 }
 
-resource "aws_iam_user_policy_attachment" "ec2" {
+resource "aws_iam_user_policy_attachment" "eks" {
   user       = aws_iam_user.cd.name
-  policy_arn = aws_iam_policy.ec2.arn
-} */
+  policy_arn = aws_iam_policy.eks.arn
+}
