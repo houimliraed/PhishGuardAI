@@ -5,16 +5,6 @@
 
 A machine learning-powered web application to detect and classify phishing URLs.
 
-## 🚀 Team Members
-
-| Name | Role | GitLab |
-|------|------|--------|
-| Houimli Raed | Product Owner | @houimliraed |
-| Abroud Ridha | DevOps Engineer | @abroud.ridha91 |
-| Khalfallah Fedi | Backend Developer | @FediTheOne |
-| Bouraoui Saoussen | Frontend Developer | @saoussen.br |
-| Ben Hadj Dahmen Oussama | ML Engineer & Security | @cybereagle2001 |
-
 ## Setup
 
 ### Initial Setup
